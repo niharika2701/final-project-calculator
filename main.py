@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.exceptions import RequestValidationError
 from app.database import get_engine
 from app import models
-from app.routers import users, calculations, auth
+from app.routers import users, calculations, auth, reports
 import uvicorn
 import logging
 
@@ -18,6 +18,7 @@ models.Base.metadata.create_all(bind=get_engine())
 app.include_router(users.router)
 app.include_router(calculations.router)
 app.include_router(auth.router)
+app.include_router(reports.router)
 
 templates = Jinja2Templates(directory="templates")
 
@@ -62,3 +63,7 @@ if __name__ == "__main__":
 @app.get("/calculations")
 async def calculations_page(request: Request):
     return templates.TemplateResponse(request=request, name="calculations.html")
+
+@app.get("/reports")
+async def reports_page(request: Request):
+    return templates.TemplateResponse(request=request, name="reports.html")

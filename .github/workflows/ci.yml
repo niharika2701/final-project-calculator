@@ -1,4 +1,4 @@
-name: CI - Module 14 BREAD Frontend
+name: CI - Final Project
 
 on:
   push:
@@ -8,8 +8,49 @@ on:
 
 jobs:
 
-  test:
-    name: Run Playwright E2E Tests
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: python -m pytest tests/test_reports_unit.py -v
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: sqlite:///./test_integration.db
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run integration tests
+        run: python -m pytest tests/test_reports_integration.py -v
+
+  e2e-tests:
+    name: E2E Tests
     runs-on: ubuntu-latest
 
     env:
@@ -34,12 +75,12 @@ jobs:
           playwright install-deps chromium
 
       - name: Run E2E tests
-        run: python -m pytest tests/test_calculations_e2e.py -v
+        run: python -m pytest tests/test_calculations_e2e.py tests/test_e2e_reports.py -v
 
   deploy:
     name: Build and Push to Docker Hub
     runs-on: ubuntu-latest
-    needs: test
+    needs: [unit-tests, integration-tests, e2e-tests]
 
     steps:
       - name: Checkout code
@@ -56,4 +97,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: niharika2701/module14-bread-frontend:latest
+          tags: niharika2701/final-project-calculator:latest

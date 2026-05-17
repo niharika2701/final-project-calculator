@@ -9,7 +9,16 @@ SERVER_URL = "http://127.0.0.1:8000"
 
 
 @pytest.fixture(scope="session", autouse=True)
-def start_server():
+def start_server(request):
+    """
+    Start a real uvicorn server for E2E tests only.
+    Skips startup when running unit or integration tests.
+    """
+    e2e_tests = [item for item in request.session.items if "e2e" in item.nodeid]
+    if not e2e_tests:
+        yield
+        return
+
     env = os.environ.copy()
     env["DATABASE_URL"] = "sqlite:///./test_e2e.db"
 
@@ -17,10 +26,9 @@ def start_server():
         [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", "8000"],
         env=env,
         stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
+        stderr=subprocess.DEVNULL,
     )
 
-    # Wait until server responds
     for _ in range(30):
         try:
             r = requests.get(f"{SERVER_URL}/health", timeout=1)
@@ -30,7 +38,6 @@ def start_server():
             pass
         time.sleep(0.5)
 
-    # Extra buffer so templates are fully loaded
     time.sleep(2)
 
     yield

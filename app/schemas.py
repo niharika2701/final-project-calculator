@@ -1,6 +1,6 @@
 from pydantic import BaseModel, model_validator
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Dict
 from pydantic import EmailStr
 from app.calculations import OperationType
 
@@ -46,3 +46,15 @@ class CalculationRead(BaseModel):
     user_id: Optional[int]
     created_at: datetime
     model_config = {"from_attributes": True}
+
+class ReportRead(BaseModel):
+    """
+    Response schema for GET /reports/summary.
+    Contains aggregate stats + the 5 most recent calculations.
+    """
+    total_calculations: int
+    by_operation: Dict[str, int]
+    average_a: float
+    average_b: float
+    average_result: float
+    most_recent: List[CalculationRead]
